@@ -1,0 +1,5 @@
+date,amount,ref,party,description
+2025-09-01,1500.00,TXN1001,Acme Co,NEFT Credit
+2025-09-02,2000.00,TXN1002,Bravo Ltd,UPI Credit
+2025-09-03,500.00,TXN1003,Charlie LLP,PG Credit
+2025-09-05,750.00,TXN1004,Vendor X,NEFT Credit
