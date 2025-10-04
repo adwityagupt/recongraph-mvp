@@ -3,7 +3,10 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 from recon_engine import load_table, reconcile
-from cert_generator import generate_bank_reco_pdf, generate_generic_cert_pdf
+from cert_generator import (
+    generate_bank_reco_pdf_bytes,
+    generate_generic_cert_pdf_bytes
+)
 
 st.set_page_config(page_title="ReconGraph DocReconcile MVP", layout="wide")
 
@@ -70,19 +73,39 @@ if run and left_file and right_file:
     ])
 
     if st.button("📄 Generate"):
-        if cert_type == "Download Matches (CSV)":
-            csv = matches.to_csv(index=False).encode("utf-8")
-            st.download_button("Download CSV", data=csv, file_name="recon_matches.csv", mime="text/csv")
+    if cert_type == "Download Matches (CSV)":
+        csv = matches.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            "Download CSV",
+            data=csv,
+            file_name="recon_matches.csv",
+            mime="text/csv",
+            key="dl_csv"
+        )
+    else:
+        if cert_type.startswith("Bank Reconciliation"):
+            pdf_bytes = generate_bank_reco_pdf_bytes(
+                company, period, len(matches), len(exL), len(exR)
+            )
+            st.download_button(
+                "Download PDF",
+                data=pdf_bytes,
+                file_name="bank_reconciliation_statement.pdf",
+                mime="application/pdf",
+                key="dl_brs_pdf"
+            )
         else:
-            output = BytesIO()
-            if cert_type.startswith("Bank Reconciliation"):
-                generate_bank_reco_pdf(output, company, period, len(matches), len(exL), len(exR))
-            else:
-                notes = f"Matched: {len(matches)} | Unmatched Left: {len(exL)} | Unmatched Right: {len(exR)}"
-                generate_generic_cert_pdf(output, "Reconciliation Certificate", company, period, notes)
-            st.download_button("Download PDF", data=output.getvalue(), file_name="reconciliation_certificate.pdf", mime="application/pdf")
-else:
-    st.info("Upload both tables and click 'Run Reconciliation'. Need sample files? Download below.")
+            notes = f"Matched: {len(matches)} | Unmatched Left: {len(exL)} | Unmatched Right: {len(exR)}"
+            pdf_bytes = generate_generic_cert_pdf_bytes(
+                "Reconciliation Certificate", company, period, notes
+            )
+            st.download_button(
+                "Download PDF",
+                data=pdf_bytes,
+                file_name="reconciliation_certificate.pdf",
+                mime="application/pdf",
+                key="dl_generic_pdf"
+            )
 
 st.markdown("---")
 st.subheader("Sample Files")
